@@ -1,20 +1,19 @@
 package com.example.customer_service.app.service.impl;
 
+import com.example.customer_service.app.mapper.CustomerMapper;
 import com.example.customer_service.app.service.CustomerService;
+import com.example.customer_service.app.util.Constants;
 import com.example.customer_service.domain.model.*;
 import com.example.customer_service.infra.adapter.CustomerRepositoryAdapter;
-import com.example.customer_service.app.mapper.CustomerMapper;
-import com.example.customer_service.app.util.Constants;
-import java.time.LocalDate;
-import java.util.DoubleSummaryStatistics;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.example.customer_service.infra.handle.exception.CustomerServiceException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.util.List;
+import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class CustomerServiceImpl implements CustomerService {
