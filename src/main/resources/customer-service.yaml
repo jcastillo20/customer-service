@@ -1,0 +1,340 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  version: "1.0.0"
+  description: |
+    Este microservicio permite gestionar clientes siguiendo las mejores prácticas de diseño y arquitectura en Java.
+    
+    Funcionalidades: 
+      • Registrar clientes con nombre, apellido, edad y fecha de nacimiento.
+    
+      • Consultar métricas como el promedio de edad y la desviación estándar.
+    
+      • Listar clientes con datos completos y cálculos derivados (por ejemplo, una fecha estimada para un evento futuro, como la esperanza de vida).
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desarrollo local
+tags:
+  - name: Clientes
+    description: Endpoints para la gestión de clientes.
+  - name: Métricas
+    description: Endpoint para obtener métricas de clientes.
+paths:
+  /api/customers:
+    post:
+      tags:
+        - Clientes
+      summary: Registrar un nuevo cliente
+      description: Crea un cliente registrando nombre, apellido, edad y fecha de nacimiento.
+      requestBody:
+        $ref: '#/components/requestBodies/CustomerRequestBody'
+      responses:
+        "201":
+          $ref: '#/components/responses/CustomerCreated'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+      security:
+        - bearerAuth: []
+    get:
+      tags:
+        - Clientes
+      summary: Listar clientes
+      description: Retorna la lista de clientes registrados con todos sus datos y un campo calculado (por ejemplo, la fecha estimada de un evento futuro basado en la información del cliente).
+      responses:
+        "200":
+          $ref: '#/components/responses/CustomerList'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+      security:
+        - bearerAuth: []
+  /api/customers/{id}:
+    get:
+      tags:
+        - Clientes
+      summary: Obtener un cliente por ID
+      description: Retorna los detalles del cliente cuyo identificador único es proporcionado.
+      parameters:
+        - name: id
+          in: path
+          description: ID único del cliente.
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          $ref: '#/components/responses/CustomerFound'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "404":
+          $ref: '#/components/responses/NotFound'
+        "500":
+          $ref: '#/components/responses/InternalError'
+      security:
+        - bearerAuth: []
+  /api/metrics:
+    get:
+      tags:
+        - Métricas
+      summary: Consultar métricas extendidas de clientes
+      description: |
+        Devuelve métricas extendidas del sistema basadas en la información de registros de clientes:
+        - Promedio de edad y desviación estándar.
+        - Número total de clientes y edades mínimas y máximas.
+        - Mediana y moda de las edades.
+        - Percentiles (p25, p50, p75) de la edad.
+        - Distribución porcentual de clientes en diferentes rangos etarios.
+      responses:
+        "200":
+          $ref: '#/components/responses/MetricsOk'
+        "400":
+          $ref: '#/components/responses/BadRequest'
+        "401":
+          $ref: '#/components/responses/Unauthorized'
+        "403":
+          $ref: '#/components/responses/Forbidden'
+        "500":
+          $ref: '#/components/responses/InternalError'
+      security:
+        - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  requestBodies:
+    CustomerRequestBody:
+      description: Datos necesarios para registrar el cliente.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerRequest'
+  responses:
+    CustomerCreated:
+      description: Cliente creado exitosamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerResponse'
+    CustomerList:
+      description: Lista de clientes.
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/CustomerResponse'
+    CustomerFound:
+      description: Cliente obtenido correctamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CustomerResponse'
+    MetricsOk:
+      description: Métricas obtenidas exitosamente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MetricsResponse'
+    BadRequest:
+      description: "Bad Request: Datos inválidos o incompletos. Por ejemplo, si se omiten campos obligatorios o el formato es incorrecto."
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: "Unauthorized: Credenciales no válidas proporcionadas, como un token JWT ausente o inválido."
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: "Forbidden: El usuario autenticado no tiene permisos para ejecutar esta operación."
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: "Internal Server Error: Error inesperado en el servidor durante el procesamiento de la solicitud."
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Cliente no encontrado.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    CustomerRequest:
+      type: object
+      required:
+        - nombre
+        - apellido
+        - edad
+        - fechaNacimiento
+      properties:
+        nombre:
+          type: string
+          description: Nombre del cliente.
+          example: Juan
+        apellido:
+          type: string
+          description: Apellido del cliente.
+          example: Pérez
+        edad:
+          type: integer
+          description: Edad del cliente.
+          example: 30
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento del cliente.
+          example: "1995-05-15"
+    CustomerResponse:
+      type: object
+      required:
+        - id
+        - nombre
+        - apellido
+        - edad
+        - fechaNacimiento
+      properties:
+        id:
+          type: integer
+          description: Identificador único del cliente.
+          example: 1
+        nombre:
+          type: string
+          description: Nombre del cliente.
+          example: Juan
+        apellido:
+          type: string
+          description: Apellido del cliente.
+          example: Pérez
+        edad:
+          type: integer
+          description: Edad del cliente.
+          example: 30
+        fechaNacimiento:
+          type: string
+          format: date
+          description: Fecha de nacimiento del cliente.
+          example: "1995-05-15"
+        fechaEstimadoEvento:
+          type: string
+          format: date
+          description: Fecha estimada para un evento futuro (como la esperanza de vida), calculada en base a la información del cliente.
+          example: "2080-05-15"
+    MetricsResponse:
+      type: object
+      properties:
+        promedioEdad:
+          type: number
+          format: float
+          description: Promedio de edad de los clientes registrados.
+          example: 28.5
+        desviacionEstandar:
+          type: number
+          format: float
+          description: Desviación estándar de las edades de los clientes.
+          example: 4.2
+        totalClientes:
+          type: integer
+          description: Número total de clientes registrados.
+          example: 50
+        edadMinima:
+          type: integer
+          description: Edad mínima registrada.
+          example: 18
+        edadMaxima:
+          type: integer
+          description: Edad máxima registrada.
+          example: 65
+        medianaEdad:
+          type: number
+          format: float
+          description: Mediana de las edades de los clientes.
+          example: 29.0
+        modaEdad:
+          type: number
+          format: float
+          description: Moda de las edades, es decir, la que más se repite.
+          example: 30
+        percentilesEdad:
+          $ref: '#/components/schemas/PercentilesResponse'
+        distribucionEtaria:
+          type: array
+          description: Distribución porcentual de clientes en diferentes rangos etarios.
+          items:
+            $ref: '#/components/schemas/RangoEtario'
+    PercentilesResponse:
+      type: object
+      properties:
+        p25:
+          type: number
+          format: float
+          description: Percentil 25 de las edades.
+          example: 24.0
+        p50:
+          type: number
+          format: float
+          description: Percentil 50 (mediana) de las edades.
+          example: 29.0
+        p75:
+          type: number
+          format: float
+          description: Percentil 75 de las edades.
+          example: 35.0
+    RangoEtario:
+      type: object
+      properties:
+        rango:
+          type: string
+          description: Rango etario, por ejemplo "18-25".
+          example: "18-25"
+        porcentaje:
+          type: number
+          format: float
+          description: Porcentaje de clientes en este rango.
+          example: 32.0
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Fecha y hora en que se produjo el error.
+          example: "2025-05-07T21:37:00Z"
+        status:
+          type: integer
+          description: Código de estado HTTP del error.
+          example: 400
+        error:
+          type: string
+          description: Breve descripción del error.
+          example: "Bad Request"
+        message:
+          type: string
+          description: Mensaje detallado acerca del error.
+          example: "Datos inválidos: El campo 'nombre' es obligatorio."
+        path:
+          type: string
+          description: Ruta en la que ocurrió el error.
+          example: "/api/customers"
+security:
+  - bearerAuth: []
